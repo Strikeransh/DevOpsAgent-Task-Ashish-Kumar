@@ -73,3 +73,7 @@ sudo systemctl enable --now prometheus
 echo "✅ Setup complete!"
 echo "🌐 Prometheus: http://<your-ec2-ip>:9090"
 echo "📈 Node Exporter: http://<your-ec2-ip>:9100/metrics"
+
+sudo apt install docker.io -y
+docker run -d --name hello-alive alpine tail -f /dev/null
+

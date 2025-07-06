@@ -77,3 +77,6 @@ echo "📈 Node Exporter: http://<your-ec2-ip>:9100/metrics"
 sudo apt install docker.io -y
 docker run -d --name hello-alive alpine tail -f /dev/null
 
+pip3 install requirements.txt
+
+

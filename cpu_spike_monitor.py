@@ -84,8 +84,11 @@ Logs:
     )
 
     result = response.json() 
-    return result['choices'][0]['message']['content']
-
+    try:
+        return result['choices'][0]['message']['content']
+    except Exception as e:
+        return result
+        
 #6 EXTRACT CONTAINER IDS FROM LOG ANALYSIS OUTPUT
 def extract_container_ids(ai_response):
     return re.findall(r'\b[a-f0-9]{64}\b', ai_response.lower())

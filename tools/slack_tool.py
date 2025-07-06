@@ -3,6 +3,7 @@ import os
 import requests
 
 def notify_slack(message):
+    print(message)
     try:
         webhook = os.getenv("SLACK_WEBHOOK")
         if not webhook:

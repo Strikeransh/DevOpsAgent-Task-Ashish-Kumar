@@ -3,7 +3,7 @@ import subprocess
 import os
 import requests
 
-def fetch_and_analyze_logs():
+def fetch_and_analyze_logs(_input=None):
     try:
         output = subprocess.check_output(["tail", "-n", "50", "/var/log/syslog"]).decode("utf-8")
         print("📄 Fetched last 50 lines from syslog")
@@ -18,7 +18,7 @@ def fetch_and_analyze_logs():
         }
 
         data = {
-            "model": "mixtral-8x7b-32768",
+            "model": "llama3-70b-8192",
             "messages": [
                 {"role": "user", "content": f"Analyze these logs and explain anomalies or issues:\n{output}"}
             ]

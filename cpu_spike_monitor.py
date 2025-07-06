@@ -7,11 +7,12 @@ import os
 import re
 print(os.getenv("GROQ_API_KEY"))
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+SLACK_WEBHOOK = os.getenv("SLACK_WEBHOOK")
 # 🔹 2. CONFIG
 prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
 THRESHOLD = 50.0
 QUERY = """
-1 - avg(rate(node_cpu_seconds_total{mode="idle"}[1m]))
+1 - avg(rate(node_cpu_seconds_total{mode="idle"}[2m]))
 """
 
 # 🔹 3. CPU USAGE FUNCTION
@@ -91,8 +92,8 @@ Logs:
 def extract_container_ids(ai_response):
     return re.findall(r'\b[a-f0-9]{64}\b', ai_response.lower())
 
-def extract_container_names(ai_response):
-    return re.findall(r'container\s+([a-zA-Z0-9_\-]+)', ai_response.lower())
+#def extract_container_names(ai_response):
+#    return re.findall(r'container\s+([a-zA-Z0-9_\-]+)', ai_response.lower())
 
 def restart_containers(container_ids_or_names):
     for cid in container_ids_or_names:
@@ -101,25 +102,36 @@ def restart_containers(container_ids_or_names):
         if inspect.returncode == 0:
             print(f"🔁 Restarting container: {cid}")
             subprocess.run(["docker", "restart", cid])
+            return (f"Container '{cid}' is restarted.")
         else:
-            print(f"⚠️ Container '{cid}' not found or already removed.")
+            return (f"Container '{cid}' not found or already removed.")
 
-def restart_matching_containers(possible_names):
+#def restart_matching_containers(possible_names):
     # Get all running/stopped containers and their names
-    output = subprocess.check_output(["docker", "ps", "-a", "--format", "{{.ID}} {{.Names}}"])
-    containers = output.decode("utf-8").strip().split("\n")
+#    output = subprocess.check_output(["docker", "ps", "-a", "--format", "{{.ID}} {{.Names}}"])
+#    containers = output.decode("utf-8").strip().split("\n")
 
-    restarted = []
-    for name in possible_names:
-        for line in containers:
-            cid, cname = line.split(maxsplit=1)
-            if name in cid or name in cname:
-                print(f"✅ Found match: {cname} (ID: {cid}) — restarting...")
-                subprocess.run(["docker", "restart", cid])
-                restarted.append(cname)
-                break
-    if not restarted:
-        print("⚠️ No matching containers were found for restart.")
+#    restarted = []
+#    for name in possible_names:
+#        for line in containers:
+#            cid, cname = line.split(maxsplit=1)
+#            if name in cid or name in cname:
+#                print(f"✅ Found match: {cname} (ID: {cid}) — restarting...")
+#                subprocess.run(["docker", "restart", cid])
+#                restarted.append(cname)
+#                break
+#    if not restarted:
+#        print("⚠️ No matching containers were found for restart.")
+
+
+def notify_slack(message):
+    if not SLACK_WEBHOOK:
+        return
+    try:
+        requests.post(SLACK_WEBHOOK, json={"text": message})
+    except Exception as e:
+        print(f"❌ Slack error: {e}")
+
 
 
 # 🔹 6. MAIN LOOP
@@ -140,15 +152,18 @@ if __name__ == "__main__":
                 print("🧠 Ollama Analysis:\n")
                 print(analysis)
                 container_ids = extract_container_ids(analysis)
-                container_names = extract_container_names(analysis)
+#                container_names = extract_container_names(analysis)
 
 # Combine both lists and remove duplicates
-                to_restart = list(set(container_ids + container_names))
+#                to_restart = list(set(container_ids + container_names))
+                to_restart = container_ids
                 if to_restart:
                     print("🔧 AI recommended container restart for:", to_restart)
-                    restart_containers(to_restart)
+                    msg = restart_containers(to_restart)
                 else:
-                    print("✅ No restart action needed based on AI analysis.")
+                    msg = "No Container need to be restarted"
+                print(msg)
+                notify_slack(f"CPU Alert ({cpu}%)\n" + msg)
         else:
             print("⚠️ No data from Prometheus.")
         

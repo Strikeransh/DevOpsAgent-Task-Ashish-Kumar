@@ -36,7 +36,7 @@ sudo systemctl enable --now node_exporter
 
 echo "📈 Installing Prometheus..."
 cd ~
-wget https://github.com/prometheus/prometheus/releases/download/v3.5.0-rc.0/prometheus-3.5.0-rc.0.darwin-amd64.tar.gz
+wget https://github.com/prometheus/prometheus/releases/download/v3.5.0-rc.0/prometheus-3.5.0-rc.0.linux-amd64.tar.gz
 tar -xvf prometheus-3.5.0-rc.0.darwin-amd64.tar.gz
 mv prometheus-3.5.0-rc.0.darwin-amd64 prometheus
 cd prometheus
